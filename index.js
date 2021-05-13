@@ -14,15 +14,15 @@ const jwt = require("jsonwebtoken")
 const app = express();
 
 app.use(express.json());
+
 app.use(cors({
     origin: ["http://localhost:3000"],
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 }));
 
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true}));
-
 app.use(
     session({
       key: "userId",
@@ -40,7 +40,7 @@ const db = mysql.createConnection({
     host: "localhost", 
     password: "Parsley030993", 
     database: "loginsystem",
-    port: "3307"
+    port: "3306"
 });
 
 app.post("/register", (req,res) =>{
@@ -124,6 +124,70 @@ app.get("/login", (req,res)=>{
      );
 
  });
+
+ const db2 = mysql.createConnection({
+    user: "root",
+    host: "localhost",
+    password: "Parsley030993",
+    database: "Stock",
+    port: "3306",
+  });
+  
+  app.post("/create", (req, res) => {
+    const name = req.body.name;
+    const size = req.body.size;
+    const location = req.body.location;
+  
+    db2.query(
+      "INSERT INTO Stock (name, size, location) VALUES (?,?,?)",
+      [name, size, location],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.send("Values Inserted");
+        }
+      }
+    );
+  });
+  
+  app.get("/items", (req, res) => {
+    db2.query("SELECT * FROM Stock", (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
+      }
+    });
+  });
+  
+  app.put("/update", (req, res) => {
+    const id = req.body.id;
+    const location = req.body.location;
+    db2.query(
+      "UPDATE Stock SET location = ? WHERE id = ?",
+      [location, id],
+      (err, result) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.send(result);
+        }
+      }
+    );
+  });
+  
+  app.delete("/delete/:id", (req, res) => {
+    const Id = req.params.id;
+    db2.query("DELETE FROM Stock WHERE id = Id ", Id, (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.send(result);
+      }
+    });
+  });
+  
 
 app.listen(3001, () =>{
     console.log("running server");
